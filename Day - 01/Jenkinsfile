@@ -1,0 +1,11 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Project Initialized') {
+            steps {
+                echo 'Day 01 - DevSecOps Project Initialized'
+            }
+        }
+    }
+}
