@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+
+  flask:
+
+    build: ./app
+
+    container_name: flask-prod
+
+    env_file:
+      - ./app/.env.example
+
+    ports:
+      - "5000:5000"
+
+    restart: unless-stopped
