@@ -1,0 +1,33 @@
+pipeline {
+
+    agent any
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Multi-Stage Image') {
+            steps {
+                sh 'docker build -t devsecops-flask:v3 ./app'
+            }
+        }
+
+        stage('Verify Image') {
+            steps {
+                sh 'docker images'
+            }
+        }
+
+        stage('Inspect Image') {
+            steps {
+                sh 'docker history devsecops-flask:v3'
+            }
+        }
+
+    }
+
+}
