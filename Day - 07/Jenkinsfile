@@ -1,0 +1,33 @@
+pipeline {
+
+    agent any
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Image') {
+            steps {
+                sh 'docker build -t devsecops-flask:v4 ./app'
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                sh 'docker run -d --name flask-volume -v flask-data:/data -p 5000:5000 devsecops-flask:v4 || true'
+            }
+        }
+
+        stage('Verify') {
+            steps {
+                sh 'docker ps'
+            }
+        }
+
+    }
+
+}
