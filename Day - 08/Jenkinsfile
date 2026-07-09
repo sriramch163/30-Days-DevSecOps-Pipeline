@@ -1,0 +1,39 @@
+pipeline {
+
+    agent any
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Image') {
+            steps {
+                sh 'docker build -t devsecops-flask:v5 ./app'
+            }
+        }
+
+        stage('Create Network') {
+            steps {
+                sh 'docker network inspect dev-network >/dev/null 2>&1 || docker network create dev-network'
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                sh 'docker run -d --name flask-network --network dev-network -p 5000:5000 devsecops-flask:v5 || true'
+            }
+        }
+
+        stage('Verify') {
+            steps {
+                sh 'docker network ls'
+            }
+        }
+
+    }
+
+}

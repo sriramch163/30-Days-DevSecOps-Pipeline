@@ -1,0 +1,13 @@
+Docker Networks
+
+1. bridge
+2. host
+3. none
+4. custom bridge
+
+Commands
+
+docker network ls
+docker network inspect bridge
+docker network create my-network
+docker network rm my-network
