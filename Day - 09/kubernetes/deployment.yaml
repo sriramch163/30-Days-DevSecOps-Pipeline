@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registry-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: registry-demo
+  template:
+    metadata:
+      labels:
+        app: registry-demo
+    spec:
+      containers:
+      - name: registry-demo
+        image: YOUR_DOCKER_USERNAME/devsecops-flask:v1.0.0
+        ports:
+        - containerPort: 5000

@@ -1,0 +1,57 @@
+pipeline {
+
+    agent any
+
+    environment {
+
+        IMAGE="devsecops-flask"
+
+        TAG="v1.0.0"
+
+    }
+
+    stages {
+
+        stage('Checkout') {
+
+            steps {
+
+                checkout scm
+
+            }
+
+        }
+
+        stage('Build') {
+
+            steps {
+
+                sh 'docker build -t ${IMAGE}:${TAG} ./app'
+
+            }
+
+        }
+
+        stage('Tag') {
+
+            steps {
+
+                sh 'docker tag ${IMAGE}:${TAG} YOUR_DOCKER_USERNAME/${IMAGE}:${TAG}'
+
+            }
+
+        }
+
+        stage('Push') {
+
+            steps {
+
+                sh 'echo "Run docker login before pushing images."'
+
+            }
+
+        }
+
+    }
+
+}
