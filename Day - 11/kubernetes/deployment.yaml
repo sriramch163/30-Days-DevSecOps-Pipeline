@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: github-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: github-demo
+  template:
+    metadata:
+      labels:
+        app: github-demo
+    spec:
+      containers:
+      - name: github-demo
+        image: github-flask:v1
+        ports:
+        - containerPort: 5000
