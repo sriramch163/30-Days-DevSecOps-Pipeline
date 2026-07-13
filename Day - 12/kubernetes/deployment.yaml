@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multibranch-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: multibranch-demo
+  template:
+    metadata:
+      labels:
+        app: multibranch-demo
+    spec:
+      containers:
+      - name: app
+        image: multibranch-demo:v1.0.0
+        ports:
+        - containerPort: 5000
