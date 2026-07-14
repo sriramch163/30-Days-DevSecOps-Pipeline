@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: credentials-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: credentials-demo
+  template:
+    metadata:
+      labels:
+        app: credentials-demo
+    spec:
+      containers:
+      - name: credentials-demo
+        image: jenkins-secret-demo:v1
+        ports:
+        - containerPort: 5000

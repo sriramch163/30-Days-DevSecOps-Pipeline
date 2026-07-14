@@ -1,0 +1,94 @@
+pipeline {
+
+    agent any
+
+    environment {
+        IMAGE_NAME = "jenkins-secret-demo"
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'python3 -m pip install -r app/requirements.txt'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh 'pytest tests'
+            }
+        }
+
+        stage('Load GitHub Token') {
+            steps {
+                withCredentials([
+                    string(
+                        credentialsId: 'github-token',
+                        variable: 'GITHUB_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                    echo "GitHub Token Loaded"
+                    echo "Token Length:"
+                    echo ${#GITHUB_TOKEN}
+                    '''
+                }
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
+                    sh '''
+                    echo "$DOCKER_PASS" | docker login \
+                    -u "$DOCKER_USER" \
+                    --password-stdin
+                    '''
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t ${IMAGE_NAME}:v1 app'
+            }
+        }
+
+        stage('Verify Docker Image') {
+            steps {
+                sh 'docker images'
+            }
+        }
+
+    }
+
+    post {
+
+        success {
+            echo 'Secure Pipeline Completed'
+        }
+
+        failure {
+            echo 'Pipeline Failed'
+        }
+
+        always {
+            cleanWs()
+        }
+
+    }
+
+}
