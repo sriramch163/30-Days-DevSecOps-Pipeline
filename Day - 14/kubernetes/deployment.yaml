@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shared-library-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shared-library-demo
+  template:
+    metadata:
+      labels:
+        app: shared-library-demo
+    spec:
+      containers:
+      - name: app
+        image: shared-library-demo:v1
+        ports:
+        - containerPort: 5000
