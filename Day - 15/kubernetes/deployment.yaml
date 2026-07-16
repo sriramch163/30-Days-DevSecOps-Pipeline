@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarqube-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sonarqube-demo
+  template:
+    metadata:
+      labels:
+        app: sonarqube-demo
+    spec:
+      containers:
+      - name: app
+        image: sonarqube-demo:v1
+        ports:
+        - containerPort: 5000

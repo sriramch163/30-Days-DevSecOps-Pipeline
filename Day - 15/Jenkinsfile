@@ -1,0 +1,101 @@
+pipeline {
+
+    agent any
+
+    tools {
+        jdk 'jdk17'
+    }
+
+    environment {
+        SCANNER_HOME = tool 'SonarScanner'
+        IMAGE_NAME = "sonarqube-demo"
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'python3 -m pip install -r app/requirements.txt'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh 'pytest tests'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+
+                withSonarQubeEnv('SonarQube') {
+
+                    sh '''
+                    ${SCANNER_HOME}/bin/sonar-scanner \
+                    -Dproject.settings=sonarqube/sonar-project.properties
+                    '''
+
+                }
+
+            }
+        }
+
+        stage('Quality Gate') {
+
+            steps {
+
+                timeout(time:5, unit:'MINUTES') {
+
+                    waitForQualityGate abortPipeline: true
+
+                }
+
+            }
+
+        }
+
+        stage('Build Docker Image') {
+
+            steps {
+
+                sh 'docker build -t ${IMAGE_NAME}:v1 app'
+
+            }
+
+        }
+
+        stage('Verify Image') {
+
+            steps {
+
+                sh 'docker images'
+
+            }
+
+        }
+
+    }
+
+    post {
+
+        success {
+
+            echo 'Pipeline Completed Successfully'
+
+        }
+
+        failure {
+
+            echo 'Quality Gate Failed'
+
+        }
+
+    }
+
+}
