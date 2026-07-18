@@ -1,0 +1,114 @@
+pipeline {
+
+    agent any
+
+    parameters {
+
+        string(
+            name: 'VERSION',
+            defaultValue: '1.0.0',
+            description: 'Docker Image Version'
+        )
+
+    }
+
+    environment {
+
+        IMAGE_NAME = "flask-demo"
+
+        REGISTRY = "localhost:5000"
+
+    }
+
+    stages {
+
+        stage('Checkout') {
+
+            steps {
+
+                checkout scm
+
+            }
+
+        }
+
+        stage('Install Dependencies') {
+
+            steps {
+
+                sh 'python3 -m pip install -r app/requirements.txt'
+
+            }
+
+        }
+
+        stage('Run Tests') {
+
+            steps {
+
+                sh 'pytest tests'
+
+            }
+
+        }
+
+        stage('Build Docker Image') {
+
+            steps {
+
+                sh '''
+                docker build \
+                -t ${IMAGE_NAME}:${VERSION} app
+                '''
+
+            }
+
+        }
+
+        stage('Tag Images') {
+
+            steps {
+
+                sh '''
+                docker tag ${IMAGE_NAME}:${VERSION} ${REGISTRY}/${IMAGE_NAME}:${VERSION}
+
+                docker tag ${IMAGE_NAME}:${VERSION} ${REGISTRY}/${IMAGE_NAME}:latest
+                '''
+
+            }
+
+        }
+
+        stage('Push Images') {
+
+            steps {
+
+                sh '''
+                docker push ${REGISTRY}/${IMAGE_NAME}:${VERSION}
+
+                docker push ${REGISTRY}/${IMAGE_NAME}:latest
+                '''
+
+            }
+
+        }
+
+    }
+
+    post {
+
+        success {
+
+            echo "Release Completed"
+
+        }
+
+        failure {
+
+            echo "Release Failed"
+
+        }
+
+    }
+
+}
