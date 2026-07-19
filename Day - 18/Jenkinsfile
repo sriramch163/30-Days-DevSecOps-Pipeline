@@ -1,0 +1,119 @@
+pipeline {
+
+    agent any
+
+    environment {
+
+        IMAGE_NAME = "flask-demo"
+        IMAGE_TAG  = "1.0.0"
+
+    }
+
+    stages {
+
+        stage('Checkout') {
+
+            steps {
+
+                checkout scm
+
+            }
+
+        }
+
+        stage('Install Dependencies') {
+
+            steps {
+
+                sh 'python3 -m pip install -r app/requirements.txt'
+
+            }
+
+        }
+
+        stage('Run Tests') {
+
+            steps {
+
+                sh 'pytest tests'
+
+            }
+
+        }
+
+        stage('Build Docker Image') {
+
+            steps {
+
+                sh '''
+                docker build \
+                -t ${IMAGE_NAME}:${IMAGE_TAG} app
+                '''
+
+            }
+
+        }
+
+        stage('Trivy Security Scan') {
+
+            steps {
+
+                sh '''
+                trivy image \
+                --severity HIGH,CRITICAL \
+                --exit-code 1 \
+                --format table \
+                ${IMAGE_NAME}:${IMAGE_TAG}
+                '''
+
+            }
+
+        }
+
+        stage('Generate Reports') {
+
+            steps {
+
+                sh '''
+                mkdir -p reports
+
+                trivy image \
+                --format json \
+                -o reports/trivy-report.json \
+                ${IMAGE_NAME}:${IMAGE_TAG}
+
+                trivy image \
+                --format table \
+                -o reports/trivy-report.txt \
+                ${IMAGE_NAME}:${IMAGE_TAG}
+                '''
+
+            }
+
+        }
+
+    }
+
+    post {
+
+        always {
+
+            archiveArtifacts artifacts: 'reports/*'
+
+        }
+
+        success {
+
+            echo "Security Scan Passed"
+
+        }
+
+        failure {
+
+            echo "Critical Vulnerabilities Found"
+
+        }
+
+    }
+
+}
