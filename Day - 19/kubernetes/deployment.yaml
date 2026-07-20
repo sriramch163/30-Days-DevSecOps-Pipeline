@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: syft-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: syft-demo
+  template:
+    metadata:
+      labels:
+        app: syft-demo
+    spec:
+      containers:
+      - name: syft-demo
+        image: flask-demo:1.0.0
+        ports:
+        - containerPort: 5000
