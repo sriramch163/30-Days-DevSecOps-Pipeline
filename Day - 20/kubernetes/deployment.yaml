@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grype-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grype-demo
+  template:
+    metadata:
+      labels:
+        app: grype-demo
+    spec:
+      containers:
+      - name: grype-demo
+        image: flask-demo:1.0.0
+        ports:
+        - containerPort: 5000

@@ -1,0 +1,123 @@
+pipeline {
+
+    agent any
+
+    environment {
+
+        IMAGE_NAME = "flask-demo"
+        IMAGE_TAG  = "1.0.0"
+
+    }
+
+    stages {
+
+        stage('Checkout') {
+
+            steps {
+                checkout scm
+            }
+
+        }
+
+        stage('Install Dependencies') {
+
+            steps {
+                sh 'python3 -m pip install -r app/requirements.txt'
+            }
+
+        }
+
+        stage('Run Tests') {
+
+            steps {
+                sh 'pytest tests'
+            }
+
+        }
+
+        stage('Build Docker Image') {
+
+            steps {
+
+                sh '''
+                docker build \
+                -t ${IMAGE_NAME}:${IMAGE_TAG} app
+                '''
+
+            }
+
+        }
+
+        stage('Generate SBOM') {
+
+            steps {
+
+                sh '''
+                mkdir -p reports
+
+                syft ${IMAGE_NAME}:${IMAGE_TAG} \
+                -o spdx-json=reports/sbom-spdx.json
+                '''
+
+            }
+
+        }
+
+        stage('Grype Image Scan') {
+
+            steps {
+
+                sh '''
+                grype ${IMAGE_NAME}:${IMAGE_TAG} \
+                --fail-on high \
+                -o table \
+                > reports/grype-image.txt
+                '''
+
+            }
+
+        }
+
+        stage('Grype SBOM Scan') {
+
+            steps {
+
+                sh '''
+                grype sbom:reports/sbom-spdx.json \
+                -o json \
+                > reports/grype-sbom.json
+
+                grype sbom:reports/sbom-spdx.json \
+                -o sarif \
+                > reports/grype.sarif
+                '''
+
+            }
+
+        }
+
+    }
+
+    post {
+
+        always {
+
+            archiveArtifacts artifacts: 'reports/*'
+
+        }
+
+        success {
+
+            echo "Security Scan Completed Successfully"
+
+        }
+
+        failure {
+
+            echo "Pipeline Failed Due To Vulnerabilities"
+
+        }
+
+    }
+
+}
