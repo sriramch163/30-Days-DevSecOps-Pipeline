@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dependency-check-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dependency-check-demo
+  template:
+    metadata:
+      labels:
+        app: dependency-check-demo
+    spec:
+      containers:
+      - name: dependency-check-demo
+        image: flask-demo:1.0.0
+        ports:
+        - containerPort: 5000

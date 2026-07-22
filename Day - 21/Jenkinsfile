@@ -1,0 +1,111 @@
+pipeline {
+
+    agent any
+
+    environment {
+
+        IMAGE_NAME = "flask-demo"
+        IMAGE_TAG  = "1.0.0"
+
+    }
+
+    stages {
+
+        stage('Checkout') {
+
+            steps {
+                checkout scm
+            }
+
+        }
+
+        stage('Install Dependencies') {
+
+            steps {
+                sh 'python3 -m pip install -r app/requirements.txt'
+            }
+
+        }
+
+        stage('Run Tests') {
+
+            steps {
+                sh 'pytest tests'
+            }
+
+        }
+
+        stage('Build Docker Image') {
+
+            steps {
+
+                sh '''
+                docker build \
+                -t ${IMAGE_NAME}:${IMAGE_TAG} app
+                '''
+
+            }
+
+        }
+
+        stage('OWASP Dependency-Check') {
+
+            steps {
+
+                sh '''
+                mkdir -p reports
+
+                dependency-check.sh \
+                  --project FlaskDemo \
+                  --scan app \
+                  --out reports \
+                  --format HTML
+
+                dependency-check.sh \
+                  --project FlaskDemo \
+                  --scan app \
+                  --out reports \
+                  --format JSON
+
+                dependency-check.sh \
+                  --project FlaskDemo \
+                  --scan app \
+                  --out reports \
+                  --format XML
+
+                dependency-check.sh \
+                  --project FlaskDemo \
+                  --scan app \
+                  --out reports \
+                  --format SARIF
+                '''
+
+            }
+
+        }
+
+    }
+
+    post {
+
+        always {
+
+            archiveArtifacts artifacts: 'reports/*'
+
+        }
+
+        success {
+
+            echo "Dependency Scan Completed"
+
+        }
+
+        failure {
+
+            echo "Dependency Scan Failed"
+
+        }
+
+    }
+
+}
