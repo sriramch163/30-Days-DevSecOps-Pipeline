@@ -1,0 +1,119 @@
+pipeline {
+
+    agent any
+
+    environment {
+
+        IMAGE_NAME = "flask-demo"
+        IMAGE_TAG  = "1.0.0"
+
+    }
+
+    stages {
+
+        stage('Checkout') {
+
+            steps {
+                checkout scm
+            }
+
+        }
+
+        stage('Install Dependencies') {
+
+            steps {
+                sh 'python3 -m pip install -r app/requirements.txt'
+            }
+
+        }
+
+        stage('Run Tests') {
+
+            steps {
+                sh 'pytest tests'
+            }
+
+        }
+
+        stage('Build Docker Image') {
+
+            steps {
+
+                sh '''
+                docker build \
+                -t ${IMAGE_NAME}:${IMAGE_TAG} app
+                '''
+
+            }
+
+        }
+
+        stage('Docker Scout Quick View') {
+
+            steps {
+
+                sh '''
+                mkdir -p reports
+
+                docker scout quickview \
+                ${IMAGE_NAME}:${IMAGE_TAG} \
+                > reports/scout-quickview.txt
+                '''
+
+            }
+
+        }
+
+        stage('Docker Scout Recommendations') {
+
+            steps {
+
+                sh '''
+                docker scout recommendations \
+                ${IMAGE_NAME}:${IMAGE_TAG} \
+                > reports/scout-recommendations.txt
+                '''
+
+            }
+
+        }
+
+        stage('Docker Scout CVEs') {
+
+            steps {
+
+                sh '''
+                docker scout cves \
+                ${IMAGE_NAME}:${IMAGE_TAG} \
+                > reports/scout-cves.txt
+                '''
+
+            }
+
+        }
+
+    }
+
+    post {
+
+        always {
+
+            archiveArtifacts artifacts: 'reports/*'
+
+        }
+
+        success {
+
+            echo "Docker Scout Analysis Completed"
+
+        }
+
+        failure {
+
+            echo "Docker Scout Analysis Failed"
+
+        }
+
+    }
+
+}

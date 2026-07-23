@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: docker-scout-demo
+spec:
+  selector:
+    app: docker-scout-demo
+  ports:
+    - port: 80
+      targetPort: 5000
+  type: ClusterIP

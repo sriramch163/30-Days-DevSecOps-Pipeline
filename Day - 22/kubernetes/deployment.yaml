@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docker-scout-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: docker-scout-demo
+  template:
+    metadata:
+      labels:
+        app: docker-scout-demo
+    spec:
+      containers:
+      - name: docker-scout-demo
+        image: flask-demo:1.0.0
+        ports:
+        - containerPort: 5000
