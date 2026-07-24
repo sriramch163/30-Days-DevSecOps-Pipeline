@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cosign-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cosign-demo
+  template:
+    metadata:
+      labels:
+        app: cosign-demo
+    spec:
+      containers:
+      - name: cosign-demo
+        image: flask-demo:1.0.0
+        ports:
+        - containerPort: 5000

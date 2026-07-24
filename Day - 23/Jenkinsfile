@@ -1,0 +1,96 @@
+pipeline {
+
+    agent any
+
+    environment {
+
+        IMAGE_NAME = "flask-demo"
+        IMAGE_TAG  = "1.0.0"
+
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'python3 -m pip install -r app/requirements.txt'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh 'pytest tests'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                docker build \
+                  -t ${IMAGE_NAME}:${IMAGE_TAG} app
+                '''
+            }
+        }
+
+        stage('Generate Cosign Keys') {
+            steps {
+                sh '''
+                mkdir -p keys
+
+                if [ ! -f keys/cosign.key ]; then
+                    COSIGN_PASSWORD="" cosign generate-key-pair \
+                    --output-key-prefix keys/cosign
+                fi
+                '''
+            }
+        }
+
+        stage('Sign Image') {
+            steps {
+                sh '''
+                COSIGN_PASSWORD="" \
+                cosign sign \
+                --key keys/cosign.key \
+                ${IMAGE_NAME}:${IMAGE_TAG}
+                '''
+            }
+        }
+
+        stage('Verify Signature') {
+            steps {
+                sh '''
+                COSIGN_PASSWORD="" \
+                cosign verify \
+                --key keys/cosign.pub \
+                ${IMAGE_NAME}:${IMAGE_TAG} \
+                > reports/signature-verification.txt
+                '''
+            }
+        }
+
+    }
+
+    post {
+
+        always {
+            archiveArtifacts artifacts: 'reports/*'
+            archiveArtifacts artifacts: 'keys/*.pub'
+        }
+
+        success {
+            echo "Image Successfully Signed"
+        }
+
+        failure {
+            echo "Signing or Verification Failed"
+        }
+
+    }
+
+}
