@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kyverno-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kyverno-demo
+  template:
+    metadata:
+      labels:
+        app: kyverno-demo
+    spec:
+      containers:
+      - name: kyverno-demo
+        image: flask-demo:1.0.0
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        securityContext:
+          privileged: false
+        ports:
+        - containerPort: 5000
