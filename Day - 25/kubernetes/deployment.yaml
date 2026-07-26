@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gatekeeper-demo
+  labels:
+    app: gatekeeper-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gatekeeper-demo
+  template:
+    metadata:
+      labels:
+        app: gatekeeper-demo
+    spec:
+      containers:
+      - name: gatekeeper-demo
+        image: docker.io/flask-demo:1.0.0
+        securityContext:
+          privileged: false
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        ports:
+        - containerPort: 5000

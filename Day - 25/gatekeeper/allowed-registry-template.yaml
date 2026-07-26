@@ -1,0 +1,19 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8sallowedregistry
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sAllowedRegistry
+  targets:
+  - target: admission.k8s.gatekeeper.sh
+    rego: |
+      package k8sallowedregistry
+
+      violation[{"msg": msg}] {
+        image := input.review.object.spec.containers[_].image
+        not startswith(image, "docker.io/")
+        msg := "Only docker.io images are allowed"
+      }
