@@ -1,0 +1,13 @@
+- rule: Read Sensitive File
+
+  desc: Detect access to passwd or shadow
+
+  condition: >
+    open_read and
+    fd.name in (/etc/passwd,/etc/shadow)
+
+  output: >
+    Sensitive file accessed
+    (file=%fd.name)
+
+  priority: ERROR

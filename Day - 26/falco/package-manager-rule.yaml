@@ -1,0 +1,13 @@
+- rule: Package Manager Execution
+
+  desc: Detect apt, yum or apk execution
+
+  condition: >
+    spawned_process and
+    proc.name in (apt,apt-get,yum,dnf,apk)
+
+  output: >
+    Package manager executed
+    (command=%proc.cmdline)
+
+  priority: WARNING

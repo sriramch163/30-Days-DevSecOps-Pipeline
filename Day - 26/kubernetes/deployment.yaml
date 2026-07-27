@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: falco-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: falco-demo
+  template:
+    metadata:
+      labels:
+        app: falco-demo
+    spec:
+      containers:
+      - name: falco-demo
+        image: flask-demo:1.0.0
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+        ports:
+        - containerPort: 5000

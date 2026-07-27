@@ -1,0 +1,14 @@
+- rule: Terminal Shell in Container
+
+  desc: Detect interactive shell
+
+  condition: >
+    container and
+    spawned_process and
+    proc.name in (bash,sh,zsh)
+
+  output: >
+    Interactive shell detected
+    (user=%user.name command=%proc.cmdline)
+
+  priority: WARNING

@@ -1,0 +1,77 @@
+pipeline {
+
+    agent any
+
+    environment {
+        IMAGE_NAME="flask-demo"
+        IMAGE_TAG="1.0.0"
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Python Dependencies') {
+            steps {
+                sh 'python3 -m pip install -r app/requirements.txt'
+            }
+        }
+
+        stage('Run Unit Tests') {
+            steps {
+                sh 'pytest tests'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} app'
+            }
+        }
+
+        stage('Deploy Application') {
+            steps {
+                sh 'kubectl apply -f kubernetes/'
+            }
+        }
+
+        stage('Verify Falco') {
+            steps {
+                sh '''
+                mkdir -p reports
+
+                kubectl get pods -n falco \
+                > reports/falco-pods.txt
+
+                kubectl logs \
+                -n falco \
+                daemonset/falco \
+                --tail=100 \
+                > reports/falco.log || true
+                '''
+            }
+        }
+
+    }
+
+    post {
+
+        always {
+            archiveArtifacts artifacts: 'reports/*'
+        }
+
+        success {
+            echo "Falco Runtime Monitoring Enabled"
+        }
+
+        failure {
+            echo "Falco Verification Failed"
+        }
+
+    }
+
+}
